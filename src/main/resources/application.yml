@@ -14,3 +14,4 @@ spring:
 logging.level:
  org.hibernate.SQL: debug
 # org.hibernate.type: trace
+#trace옵션은 파라미터 바인딩된 쿼리까지 볼 수 있다.
