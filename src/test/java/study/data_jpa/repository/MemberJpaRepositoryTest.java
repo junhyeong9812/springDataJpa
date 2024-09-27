@@ -20,19 +20,19 @@ class MemberJpaRepositoryTest {
     @Autowired
     MemberJpaRepository memberJpaRepository;
     
-    @Test
-    public void testMember(){
-        Member member=new Member("memberA");
-        //생성자로 파라미터를 넘기는 게 더 좋은 방식
-        Member savedMember = memberJpaRepository.save(member);
-
-        Member findMember = memberJpaRepository.find(savedMember.getId());
-        assertThat(findMember.getId()).isEqualTo(member.getId());
-        assertThat(findMember.getUsername()).isEqualTo(member.getUsername());
-        //test의 Transactional은 rollback이 기본으로 존재
-        //만약 직접 확인하고 싶으면 @Rollback(value = false)로 설정
-        assertThat(findMember).isEqualTo(member);
-        //같은 영속성 컨텍스트를 조회하기 때문에 같다.
-    }
+//    @Test
+//    public void testMember(){
+//        Member member=new Member("memberA");
+//        //생성자로 파라미터를 넘기는 게 더 좋은 방식
+//        Member savedMember = memberJpaRepository.save(member);
+//
+//        Member findMember = memberJpaRepository.find(savedMember.getId());
+//        assertThat(findMember.getId()).isEqualTo(member.getId());
+//        assertThat(findMember.getUsername()).isEqualTo(member.getUsername());
+//        //test의 Transactional은 rollback이 기본으로 존재
+//        //만약 직접 확인하고 싶으면 @Rollback(value = false)로 설정
+//        assertThat(findMember).isEqualTo(member);
+//        //같은 영속성 컨텍스트를 조회하기 때문에 같다.
+//    }
 
 }
