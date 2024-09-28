@@ -26,9 +26,9 @@ public class Member {
     //구현체가 객체를 강제로 만들 때 사용할 수 있다.
 
     //
-//    public Member(String username) {
-//        this.username = username;
-//    }
+    public Member(String username) {
+        this.username = username;
+    }
 
     public Member(String username, int age, Team team) {
         this.username=username;
