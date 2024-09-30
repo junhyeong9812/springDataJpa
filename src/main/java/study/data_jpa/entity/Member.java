@@ -20,7 +20,11 @@ public class Member {
     @JoinColumn(name = "team_id")
     private Team team;
 
-//    protected Member() {
+    public Member(String username, int age) {
+        this.username = username;
+        this.age = age;
+    }
+    //    protected Member() {
 //    }//protected를 통해 생성자를 통해 만드는 것을 막고
     //jpa의 프록시에서 접근이 가능하도록 private가 아닌 protected로 해놔야
     //구현체가 객체를 강제로 만들 때 사용할 수 있다.

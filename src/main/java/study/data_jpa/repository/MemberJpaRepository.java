@@ -41,4 +41,12 @@ public class MemberJpaRepository {
         //결과가 단건인 경우 singleResult사용
 
     }
+
+    //회원의 이름과 나이로 검색을 하기 위해서는?
+    public List<Member> findByUserNameAndAgeGreaterThan(String username,int age){
+        return em.createQuery("select m from Member m where m.username=:username and m.age>:age")
+                .setParameter("username",username)
+                .setParameter("age",age)
+                .getResultList();
+    }
 }
