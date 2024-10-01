@@ -9,6 +9,11 @@ import lombok.*;
 @ToString(of={"id","username","age"})
 //여기에 team같은 연관관계를 적으면 이걸 타서 순환구조가 나오기 때문에
 //무한루프에 빠져서 에러가 난다.
+@NamedQuery(
+        name="Member.findByUsername",
+        query="select m from Member m where m.username= :username"
+)//이렇게 엔티티에 Named쿼리를 통해 생성할 쿼리를 볼 수 있다.
+//JPA리포지토리에서도 이 @NamedQuery는 존재해야 된다.
 public class Member {
     @Id @GeneratedValue
     @Column(name = "member_id")

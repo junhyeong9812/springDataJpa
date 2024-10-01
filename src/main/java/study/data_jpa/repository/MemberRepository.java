@@ -1,6 +1,8 @@
 package study.data_jpa.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import study.data_jpa.entity.Member;
 
@@ -29,7 +31,7 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 //    함수를 제공해준다.
     //이때 findAll에 대해 페이징이나 Sort정렬을 제공해준다.
 
-    List<Member> findByUsername(String username);
+//    List<Member> findByUsername(String username);
     //username에 대해 특화된 문제인데
     //이건 인터페이스이기 때문에 구현을 하기 위해 임플리먼츠를 하면
     //모든 기능을 다 구현해야 되기 때문에 상당히 힘들다.
@@ -58,4 +60,26 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
 //    - LIMIT: findFirst3, findFirst, findTop, findTop3
     List<Member> findTop3HelloBy();
 
+//    @Query(name = "Member.findByUsername")
+    //@Query가 없어도 잘 동작하는데 이유는 관례로 Member.findByUserName
+    //엔티티명에 .을찍고 메소드명으로 네임드쿼리를 우선적으로 찾고 있으면
+    //실행하고 없으면 구현된 메소드이름으로 쿼리를 생성한다.
+    //그래서 네임드 쿼리를 찾는게 우선순위라 이렇게 동작하는 것
+    List<Member> findByUsername(@Param("username") String username);
+    //jpql이 존재할때 네임드 파라미터를 넘겨야될 때 @Param어노테이션이 필요하다.
+    //그러면 이 Param이름으로 매핑을 시켜준다.
+    //JPA가 NamedQuery에서 Member.findByUsername이 이름을 가진 쿼리를 사용한다.
+    //이때
+
+//    이런 NamedQuery는 거의 사용하지 않는다.
+//    쿼리가 엔티티에 있기도 하고 NamedQuery는 SpringJPA의 리포지토리 메소드에
+    //쿼리를 지정할 수 있는데 이 기능이 훨씬 좋기 때문에 굳이
+    //NamedQuery로 지정하지 않는다.
+
+    //NamedQuery의 장점
+    //em.createQuery는 오타가 있어도 쿼리가 문자열이라 컴파일 오류없이 애프리케이션이
+    //실행되지만 실행되도 이 쿼리를 호출하면 에러가 나온다.
+    //하지만 NamedQuery에 오타가 있으면 스프링이 자동으로 NamedQuery의
+    //앱 로딩 시점에 파싱을 하고 문법 오류에 대해서 알려준다.
+    //NameqQuery는 정적 쿼리이기 때문에 다 파싱해서 확인한다.
 }

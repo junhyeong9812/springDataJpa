@@ -140,7 +140,18 @@ public void findTop3HelloBy(){
     //오류는 컴파일 < 시작전 에러 < 실제 운영에러 순서대로 동작하는 것
 
 
+    @Test
+    public void testNamedQuery(){
+        Member member1 = new Member("aaa", 10);
+        Member member2 = new Member("bbb", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        List<Member> result = memberRepository.findByUsername("aaa");
+        Member findMember=result.get(0);
+        assertThat(findMember).isEqualTo(member1);
+        //테스트가 정상적으로 성공한 것을 볼 수 있다. 하지만 이걸 구현하는게 상당히 번거롭다.
 
+    }
 
 
 }
