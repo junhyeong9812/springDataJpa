@@ -10,6 +10,7 @@ import study.data_jpa.dto.MemberDto;
 import study.data_jpa.entity.Member;
 import study.data_jpa.entity.Team;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -202,5 +203,23 @@ public void findTop3HelloBy(){
         //이렇게 출력되는 것을 확인할 수 있따.
 
     }
+    //컬렉션 파라미터 바인딩
+    @Test
+    public void findByNames(){
+        Member member1 = new Member("aaa", 10);
+        Member member2 = new Member("bbb", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        List<Member> usernameList = memberRepository.findByNames(Arrays.asList("aaa","bbb"));
+        for (Member m : usernameList) {
+            System.out.println("m="+m);
+        }
+//        select m1_0.member_id,m1_0.age,m1_0.team_id,m1_0.username from
+//        member m1_0 where m1_0.username in ('aaa','bbb');
+//        m=Member(id=1, username=aaa, age=10)
+//        m=Member(id=2, username=bbb, age=20)
+    }
+    //위치기반 파라미터바인딩은 쓰지않는 게 좋다.
+
 
 }

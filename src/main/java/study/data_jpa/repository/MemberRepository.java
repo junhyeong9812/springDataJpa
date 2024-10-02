@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import study.data_jpa.dto.MemberDto;
 import study.data_jpa.entity.Member;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -108,6 +109,22 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //이렇게 하면 DTO로 반환할 수 있다.
 
 
+    //파라미터 바인딩
+    //이름기반과 위치 기반이 존재하는데
+    //? : 위치 기반
+    //: : 이름 기반
+    //위치 기반은 거의 사용하지 않는다.
+    //왜냐면 코드 가독성이나 유지보수를 위해서 이름 기반을 자주 사용한다.
+    //이전에 사용했던 @Param이다.
 
+    //컬렉션 파라미터 바인딩
+    @Query("select m from Member m where m.username in :names")
+    //in절로 여러값을 조회할 때 사용한다.
+    //이렇게 하면 SQL로 들어갈 때 ()안에 배열값을 다 넣어야 됬는데 이렇게 하면
+    //컬렉션으로 in절이 자동으로 처리가 된다.
+//    List<Member> findByNames(@Param("names") List<String> names);
+    List<Member> findByNames(@Param("names") Collection<String> names);
+    //이렇게 List가 아닌 Collection으로 하면 다른 컬렉션 타입도 받을 수 있으니
+    //확장성으로 이렇게 사용하면 좋다.
 
 }
