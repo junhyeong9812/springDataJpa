@@ -153,5 +153,18 @@ public void findTop3HelloBy(){
 
     }
 
+    @Test
+    public void testQuery(){
+        Member member1 = new Member("aaa", 10);
+        Member member2 = new Member("bbb", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        List<Member> result = memberRepository.findUser("aaa",10);
+        Member findMember=result.get(0);
+        assertThat(findMember).isEqualTo(member1);
+        //테스트가 정상적으로 성공한 것을 볼 수 있다. 하지만 이걸 구현하는게 상당히 번거롭다.
+
+    }
+
 
 }

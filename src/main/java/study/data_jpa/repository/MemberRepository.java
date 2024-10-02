@@ -82,4 +82,18 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //하지만 NamedQuery에 오타가 있으면 스프링이 자동으로 NamedQuery의
     //앱 로딩 시점에 파싱을 하고 문법 오류에 대해서 알려준다.
     //NameqQuery는 정적 쿼리이기 때문에 다 파싱해서 확인한다.
+
+    //리포지토리 메소드에 쿼리 정의
+    @Query("select m from Member m where m.username=:username and m.age = :age")
+    List<Member> findUser(@Param("username") String username,@Param("age") int age);
+    //이렇게 어노테이션 쿼리를 통해 바로 쿼리를 작성할 수 있다.
+    //이 기능에 장점이 많은데
+    //jpql과 이름또한 간략하게 사용할 수 있고 복잡한 JPQL을 통해 동작하도록 할 수 있다.
+    //또한 이 기능의 장점에서 Qeury문 내부가 문자열이여도 로딩시점에 쿼리 에러가 나온다.
+    //컴포넌트 스캔에서 @Query에 정의된 NamedQuery를 파싱을 통해 SQL을 미리 만들어놓는다.
+    //그래서 파싱 과정에서 문법 오류를 찾아서 에러를 띄우는 것이다.
+    //그리고 JPA 함수명이 길 때도 이렇게 쿼리로 작성하고
+    //쿼리가 복잡할 경우 QueryDSL을 사용하는 게 좋다.
+
+
 }
