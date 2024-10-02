@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import study.data_jpa.dto.MemberDto;
 import study.data_jpa.entity.Member;
+import study.data_jpa.entity.Team;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assertions.*;
 @Rollback(false)
 class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
+    @Autowired TeamRepository teamRepository;
     @Test
     public void testMember(){
         System.out.println("memberRepository.getClass() = " + memberRepository.getClass());
@@ -166,5 +169,38 @@ public void findTop3HelloBy(){
 
     }
 
+    @Test
+    public void findUsernameList(){
+        Member member1 = new Member("aaa", 10);
+        Member member2 = new Member("bbb", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        List<String> usernameList = memberRepository.findUsernameList();
+        for (String s : usernameList) {
+            System.out.println("s="+s);
+        }
+    //s=aaa
+    //s=bbb
+    }
+
+    @Test
+    public void findMemberDto(){
+
+        Team team =new Team("teamA");
+        teamRepository.save(team);
+
+        Member member1 = new Member("aaa", 10);
+        member1.setTeam(team);
+        memberRepository.save(member1);
+
+        //DB에서 조회 시
+        List<MemberDto> memberDto = memberRepository.findMemberDto();
+        for (MemberDto dto : memberDto) {
+            System.out.println("dto = " + dto);
+        }
+        //dto = MemberDto(id=1, username=aaa, teamName=teamA)
+        //이렇게 출력되는 것을 확인할 수 있따.
+
+    }
 
 }

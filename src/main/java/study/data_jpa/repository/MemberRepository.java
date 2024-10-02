@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import study.data_jpa.dto.MemberDto;
 import study.data_jpa.entity.Member;
 
 import java.util.List;
@@ -94,6 +95,19 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //그래서 파싱 과정에서 문법 오류를 찾아서 에러를 띄우는 것이다.
     //그리고 JPA 함수명이 길 때도 이렇게 쿼리로 작성하고
     //쿼리가 복잡할 경우 QueryDSL을 사용하는 게 좋다.
+
+    //Query,값,DTO 조회
+    @Query("select m.username from Member m")
+    List<String> findUsernameList();
+
+    //DTO를 통한 값 조회
+    @Query("select new study.data_jpa.dto.MemberDto(m.id,m.username,t.name) from Member m join m.team t")
+    List<MemberDto> findMemberDto();
+    //dto로 조회 시 쿼리에서 new 오퍼레이션이 필요하다.
+    //이렇게 하기 때문에 생성자를 만든 것
+    //이렇게 하면 DTO로 반환할 수 있다.
+
+
 
 
 }
