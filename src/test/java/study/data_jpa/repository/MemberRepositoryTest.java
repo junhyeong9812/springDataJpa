@@ -221,5 +221,56 @@ public void findTop3HelloBy(){
     }
     //위치기반 파라미터바인딩은 쓰지않는 게 좋다.
 
+    //변환타입
+    @Test
+    public void returnType(){
+        Member member1 = new Member("aaa", 10);
+        Member member2 = new Member("bbb", 20);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        //컬렉션
+        List<Member> memberList = memberRepository.findListByUsername("aaa");
+        System.out.println("memberList = " + memberList.get(0));
+        //파라미터를 막 넣어서 없는 데이터일 경우에는 null이 아니가
+        //empty Collection을 반환해준다.
+        //빈 컬렉션을 반환해주는데 이게 기본적인 jpa기능이다.
+        //그래서 result=null같은 코드는 사용하면 안된다.
+        //단건 조회로 받을 경우 member
+
+        //단건 조회
+        Member member = memberRepository.findMemberByUsername("aaa");
+        System.out.println("member = " + member);
+        //하지만 단건 조회를 할 경우
+        //없으면 empty collection이 아니라
+        //결과가 null로 나온다.
+        //jpa는 싱글값에 대해서는 없으면 notResultExp이 나오는데
+        //spring data jpa는 자기가 감싸서 Null로 반환시켜준다.
+
+
+
+
+        //Optional조회
+        Optional<Member> OptionalMember = memberRepository.findOptionalByUsername("aaa");
+        System.out.println("OptionalMember = " + OptionalMember.get());
+        //하지만 자바8부터는 Optional을 사용해서
+        //null일 경우 Optional.empty가 나온다.
+        //DB에 조회할 경우 데이터가 있을 지 없을 지 모를 경우에는
+        //optional을 사용하는 게 좋다.
+        //단 여기서 단건 조회인데 여러개의 값이 넘어오면 예외가 터진다.
+        //IncorrectResultSize에러가 나온다.
+        //NoUniqueResult가 터지면 spring이 IncorrectResultSize로 변환해서
+        //익셉셥이 나오는 것이다.
+        //이렇게 하는 이유는 jpa에러보다 Spring에러에 대해서 터지는 게
+        //서비스 계층의 클라이언트 코드들은 Spring에 추상화된 에러에 의존하는 게
+        //하부의 다른 JDBC나 바꿔도 데이터가 안맞으면 같은 에러를 띄우게 할 수있다.
+        //그래서 클라이언트 코드를 바꿀 필요가 없다.
+        //jpa예외가 아닌 SPring예외로 하여 호환이 좋게 하는 것.
+
+        //Option이나 Stream, Future,CompletableFuture, page,Slice,( Mono,Flux(
+        //React))기술같은
+        // 반환타입도 존재한다.
+    }
+
 
 }

@@ -9,6 +9,7 @@ import study.data_jpa.entity.Member;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member,Long> {
@@ -126,5 +127,13 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     List<Member> findByNames(@Param("names") Collection<String> names);
     //이렇게 List가 아닌 Collection으로 하면 다른 컬렉션 타입도 받을 수 있으니
     //확장성으로 이렇게 사용하면 좋다.
+
+    //Spring Jpa 반환타입
+    //컬렉션
+    List<Member> findListByUsername(String username);
+    //단건
+    Member findMemberByUsername(String username);
+    //단건 Optional
+    Optional<Member> findOptionalByUsername(String username);
 
 }
