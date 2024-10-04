@@ -4,6 +4,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.data_jpa.dto.MemberDto;
@@ -275,6 +279,109 @@ public void findTop3HelloBy(){
 
 
     }
+    //Spring Jpa 페이징과 정렬
+    @Test
+    public void paging(){
+        //given
+        memberRepository.save(new Member("member1",10));
+        memberRepository.save(new Member("member2",10));
+        memberRepository.save(new Member("member3",10));
+        memberRepository.save(new Member("member4",10));
+        memberRepository.save(new Member("member5",10));
+
+        //page =1 offset =0 limit 10 ,page =2 offset=11 limit=20
+//        int age =10;
+//        int offset=0;
+//        int limit =3;
+        //Pageable을 사용할 때는
+        PageRequest pageRequest =
+                PageRequest
+                        .of(0, 3
+                                , Sort.by(Sort.Direction.DESC, "username"));
+        //page를 0부터 시작,페이지의 크기도 넣는다.
+        int age=10;
+
+        //when
+        Page<Member> page = memberRepository.findByAge(age,pageRequest);
+        //이렇게 하면 PageRequest의 부모 인터페이스가 Pageable이기 때문에
+        //PageRequest를 넘겨도 된다.
+        //PageRequest이걸 넘길 때 페이징 하는 쿼리는 되고
+        //반환 타입에 따라서 토탈 카운트를 날릴 지 안날릴 지 결정이 된다.
+        //page객체에 가보면 Slice는 토탈 카운트를 가져오지 않고
+        //다음 페이지 유무를 통해 확인 하는 것
+//        Slice<Member> page = memberRepository.findByAge(age,pageRequest);
+        //이때 Slice는 3개가 PageSize라면 총 4개를 요청해서 다음 페이지 유무를
+        //판단한다.
+//        select m1_0.member_id,m1_0.age,m1_0.team_id,m1_0.username
+//        from member m1_0 where m1_0.age=10
+//        order by m1_0.username desc fetch
+//        first 4 rows only;
+//        member = Member(id=5, username=member5, age=10)
+//        member = Member(id=4, username=member4, age=10)
+//        member = Member(id=3, username=member3, age=10)
+        //이렇게 총 4개를 가져온다.
+
+        //그리고 반환 타입을 page라고 받으면
+        //Page 내에 TotalCount 쿼리까지 같이 날린다.
+
+        //또한 데이터만 원하는 페이지 사이즈만 가져오고 싶을 경우에는
+//        List<Member> pageList = memberRepository.findByAgeList(age,pageRequest);
+//        이렇게 하면 size만큼만 가져올 수 있다.
+
+        //하지만 page<Member>의 Member엔티티는 DTO로 변경해서 내보내야 한다.
+        //이부분 매우 중요
+        //Page<Member>를 쉽게 DTO로 변경할 수있는 방법이 있는데
+        Page<MemberDto> map = page.map(member -> new MemberDto(member.getId(), member.getUsername(), null));
+        //map은 내부의 데이터를 변경해서 넣는 것
+        //이렇게 map을 통해 변경된 DTO로 변경한다.
+//        그럼 이 map은 DTO로 변경했으니 이대로 데이터를 내보면 된다.
+        //또한 Page도 Json타입으로 반환되기 때문에
+        //Page타입으로 APi로 보내주면 json으로 데이터를 확인할 수 있다.
+
+
+
+        //then
+        List<Member> content =page.getContent();
+        //실제 데이터 3개를 꺼낼 때는 getContent()를 통해
+        //꺼낼 수 있다.
+//        long totalCount = page.getTotalElements();
+        //토탈카운트도 가져온다.
+        for (Member member : content) {
+            System.out.println("member = " + member);
+        }
+//        System.out.println("totalCount = " + totalCount);
+//        페이징 쿼리
+//        select m1_0.member_id,m1_0.age,m1_0.team_id,m1_0.username from member m1_0 where m1_0.age=10 order by m1_0.username desc fetch first 3 rows only;
+//        토탈 카운트
+//        select count(m1_0.member_id) from member m1_0 where m1_0.age=10;
+
+//        member = Member(id=5, username=member5, age=10)
+//        member = Member(id=4, username=member4, age=10)
+//        member = Member(id=3, username=member3, age=10)
+//        totalCount = 5
+        //이렇게 나가는 것을 알 수 있다.
+        //이때 offset이 없는 이유는 0번째 페이지이기 때문
+
+        //when
+        assertThat(content.size()).isEqualTo(3);
+        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+        //이걸 통해 다음페이지 이전 페이지 유무를 알 수 있는 것이다.
+    }
+    //실무에서 Paging쿼리를 잘 안쓰는 이유는 토탈 카운트 쿼리가
+    //DB의 모든 데이터를 카운트 해야되기 때문에
+    //토탈 카운트 자체가 성능이 느리다.
+    //짤라서 가져오는 페이지는 최적화가 쉽지만 토탈 카운트는
+    //견적이 안나올 때가 많다.
+    //그래서 토탈 카운트 쿼리를 잘 짜야 한다.
+    //특히 Join이 많이 발생하게 되면
+    //totalCount는 조인을 할 필요가 없는데
+    //조인이 일어날 수 있다.
+    //그래서 Count 쿼리를 잘 작성해야 된다.
+    //Count 쿼리를 분리하는 방식이 존재한다.
 
 
 }

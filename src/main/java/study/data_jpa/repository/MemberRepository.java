@@ -1,5 +1,9 @@
 package study.data_jpa.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -135,5 +139,62 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     Member findMemberByUsername(String username);
     //단건 Optional
     Optional<Member> findOptionalByUsername(String username);
+
+//스프링 데이터 Jpa 페이징과 정렬
+    //페이징을 하는 SQL을 가져다가 사용했었는데
+    //spring jpa는 표준화를 시켜서 사용할 수 있도록 해놨다.
+
+    //data.domain.Sort 정렬 기능
+//    List<Member> findByUsername(String name,Sort sort);
+
+    //data.domain.Pageable 페이징 기능(내부 Sort 포함)
+//    Page<Member> findByAge(int age, Pageable pageable);
+    //쿼리에 대한 조건이 Pageble로 들어가는 것
+
+    //data.domain.Page 추가 count 쿼리 결과를 포함하는 페이징
+
+    //data.domain.Slice 추가 Count 쿼리 없이 다음 페이지만 확인 가능
+    //(내부적으로 limit+1)
+    //스크롤이나 더보기 버튼을 통해 다음 페이징을 할 때 이걸 사용한다.
+//    Slice<Member> findByAge(int age, Pageable pageable);
+//    Slice<Member> findByUsername(String name, Pageable pageable); //count 쿼리 사용 안함
+    //List(자바 컬렉션) :추가 Count 쿼리 없이 결과만 반환
+//    List<Member> findByAgeList(int age, Pageable pageable); //count 쿼리 사용 안함
+
+
+    //실무에서 Paging쿼리를 잘 안쓰는 이유는 토탈 카운트 쿼리가
+    //DB의 모든 데이터를 카운트 해야되기 때문에
+    //토탈 카운트 자체가 성능이 느리다.
+    //짤라서 가져오는 페이지는 최적화가 쉽지만 토탈 카운트는
+    //견적이 안나올 때가 많다.
+    //그래서 토탈 카운트 쿼리를 잘 짜야 한다.
+    //특히 Join이 많이 발생하게 되면
+    //totalCount는 조인을 할 필요가 없는데
+    //조인이 일어날 수 있다.
+    //그래서 Count 쿼리를 잘 작성해야 된다.
+    //Count 쿼리를 분리하는 방식이 존재한다.
+    @Query(
+            value = "select m from Member m left join m.team t"
+//            ,countQuery = "select count(m.username) from Member m"
+            ,countQuery = "select count(m.username) from Member m"
+    )//이렇게 쿼리를 분리하고 나면
+    Page<Member> findByAge(int age, Pageable pageable);
+    //엔티티의 구조가 복잡할수록 모든 join을 가져와서 count 연산을 하기 때문에
+    //느려질 수 있어서 이렇게 카운트 쿼리를 분리하여
+//    select m1_0.member_id,m1_0.age,m1_0.team_id,m1_0.username
+//    from member m1_0 order by m1_0.username desc
+//    fetch first 3 rows only;
+
+//    select count(m1_0.username) from member m1_0;
+    //이렇게 쿼리가 분리될 수 있도록 해야 된다.
+//    ,countQuery = "select count(m) from Member m"
+    //이렇게 되면 Count 쿼리는 심플하기 때문에 이렇게 작성해서 사용하는 게 좋다.
+    // 엔티티 구조가 복잡해질 경우 카운트 쿼리를 이처럼 분리하는 게 좋다.
+    //소팅도 복잡해지면 Query내부에 Sorting조건을 넣어서 해결하면 된다.
+
+//    Page<Member> findTop3ByAge(int age, Pageable pageable);
+//    이런식으로 상위 3개만 가져오도록 설계도 가능하다.
+    
+
 
 }
