@@ -103,4 +103,48 @@ class MemberJpaRepositoryTest {
         //테스트가 정상적으로 성공한 것을 볼 수 있다. 하지만 이걸 구현하는게 상당히 번거롭다.
 
     }
+
+    //순수 Jpa 페이징과 정렬
+    @Test
+    public void paging(){
+        //given
+        memberJpaRepository.save(new Member("member1",10));
+        memberJpaRepository.save(new Member("member2",10));
+        memberJpaRepository.save(new Member("member3",10));
+        memberJpaRepository.save(new Member("member4",10));
+        memberJpaRepository.save(new Member("member5",10));
+
+        //page =1 offset =0 limit 10 ,page =2 offset=11 limit=20
+        int age =10;
+        int offset=0;
+        int limit =3;
+        //페이징 계산은 직접
+        //when
+        List<Member> members = memberJpaRepository.findByPage(age, offset, limit);
+//        select m1_0.member_id,m1_0.age,m1_0.team_id,m1_0.username
+//        from member m1_0 where m1_0.age=10 order by m1_0.username
+//        desc offset 0 rows fetch first 3 rows only;
+
+        long totalCount = memberJpaRepository.totalCount(age);
+//        select count(m1_0.member_id) from member m1_0 where m1_0.age=10;
+
+//        위처럼 쿼리가 나가는 것을 알 수 있다.
+
+        //sql로 개발할 때는 페이징을 하는 코드들을 찾아서 사용해도 된다.
+        //페이지 계산 공식을 적용
+        //totalPage=totalCount/size...
+        //마지막 페이지
+        //최초 페이지
+        // 페이징 계산
+        int totalPages = (int) Math.ceil((double) totalCount / limit); // 총 페이지 수 계산
+        int currentPage = offset / limit + 1; // 현재 페이지
+        boolean isFirstPage = currentPage == 1; // 첫 페이지 여부
+        boolean isLastPage = currentPage == totalPages; // 마지막 페이지 여부
+
+        //then
+        assertThat(members.size()).isEqualTo(3);
+        assertThat(totalCount).isEqualTo(5);
+
+
+    }
 }

@@ -55,4 +55,32 @@ public class MemberJpaRepository {
                 .setParameter("username",username)
                 .getResultList();
     }
+
+    //Jpa 페이징과 정렬
+    //SQL로 페이징과 정렬을 하려면 엄청 힘든데
+    //row num을 여러번 사용해야 되는 복잡함이 존재한다.
+    //검색 조건 나이 10/이름으로 내림차순/페이징 조건: 첫번째 페이지, 페이지당
+    //보여줄 데이터는 3건
+    public List<Member> findByPage(int age, int offset,int limit){
+        return em.createQuery("select m from Member m " +
+                "where m.age = :age order by m.username desc")
+                .setParameter("age",age)
+                .setFirstResult(offset)//시작부분
+                .setMaxResults(limit)//끝부분
+                .getResultList();
+        //이렇게 해서 페이징을 해서 데이터를 가져오는데 이때
+        //토탈 카운트를 통해 몇번째 페이지인 지 하기 위해서
+    }
+    //토탈 카운트
+    public long totalCount(int age){
+        return em.createQuery("select count(m) from Member m where " +
+                "m.age = :age", Long.class)
+                .setParameter("age",age)
+                .getSingleResult();
+    }
+    //총 카운트와 페이징을 위한 오프셋을 볼 수 있다.
+    //그리고 총 카운트에서는 소팅(정렬)이 필요 없기 때문에 카운트에서는 안씀
+
+    //또한 이때 jpa는 방언으로 동작하기 때문에 DB가 바뀌여도 상관이 없다.
+
 }
