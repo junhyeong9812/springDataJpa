@@ -83,4 +83,22 @@ public class MemberJpaRepository {
 
     //또한 이때 jpa는 방언으로 동작하기 때문에 DB가 바뀌여도 상관이 없다.
 
+
+    //벌크성 수정 쿼리
+    //jpa는 엔티티를 가지고 와서 데이터를 변경하면 더티체킹을 통해
+    //트랜젝션 끝나는 시점에 한건 한건씩 하는 것인데
+    //이건 DB에 업데이트 쿼리를 한번에 전체 10%증가 같은 동작을
+    //하는 것을 벌크성 수정 쿼리라 한다.
+    //예시로 직원들 전체 연봉 10%상승 하는 것을 하나씩 하는 게 아닌
+    //쿼리 하나로 전체 적용 되도록 하는 것
+    //sql는 편하지만 엔티티는 별도로 분리가 되어 있다.
+
+    //회원의 전체 나이를 증가시킨다면?
+    public int bulkAgePlus(int age){
+        return em.createQuery("update Member m set m.age=m.age+1 where m.age>=:age")
+                .setParameter("age",age)
+                .executeUpdate();//excuteUpdate를 통해 응답값의 갯수가 나온다.
+        //이렇게 조건에 만족하면 벌크 업데이트가 된다.
+    }
+
 }

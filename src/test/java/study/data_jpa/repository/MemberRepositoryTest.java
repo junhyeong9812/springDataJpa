@@ -1,5 +1,7 @@
 package study.data_jpa.repository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ import static org.assertj.core.api.Assertions.*;
 class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @PersistenceContext
+    EntityManager em;
+
     @Test
     public void testMember(){
         System.out.println("memberRepository.getClass() = " + memberRepository.getClass());
@@ -383,5 +388,62 @@ public void findTop3HelloBy(){
     //그래서 Count 쿼리를 잘 작성해야 된다.
     //Count 쿼리를 분리하는 방식이 존재한다.
 
+
+    //벌크성 수정 쿼리
+    @Test
+    public void bulkUpdate(){
+        //given
+        memberRepository.save(new Member("member1",10));
+        memberRepository.save(new Member("member2",19));
+        memberRepository.save(new Member("member3",20));
+        memberRepository.save(new Member("member4",21));
+        memberRepository.save(new Member("member5",40));
+        em.flush();
+        //when
+        int resultCount = memberRepository.bulkAgePlus(20);
+        //영속성 컨텍스트가 데이터의 변경사항을 모르기 때문에
+        //벌크 연산 이후에는 영속성 컨텍스트는 flush랑 clear로 날리고
+        //다시 영속성 컨텍스트로 객체를 받아야 한다.
+        //flush랑 clear를 하기 위해서는
+        //persistContext를 통해 엔티티 메니져를 주입하여 사용
+//        em.clear();
+        //하지만 Spring Data Jpa에서는 @Modifying(clearAutomatically = true)
+        //를 통해 clear를 사용 가능
+
+        List<Member> result = memberRepository.findByUsername("member5");
+        Member member = result.get(0);
+        System.out.println("member = " + member);
+        //이때 member는 40이다.
+//        member = Member(id=5, username=member5, age=40)
+        //하지만 DB에는 41로 반영이 되어 있어서
+        //데이터가 일치하지 않는다.
+        //flush와 clear를 하면
+//        member = Member(id=5, username=member5, age=41)
+//        age가 41로 되어진 것을 확인할수 있다.
+        //그래서 벌크 연산 후에는 반드시 클리어와 플러시를 해주거나
+        //그냥 트랜젝션을 종료시키는 게 좋다.
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
+//        update member m1_0 set age=(m1_0.age+1) where m1_0.age>=20;
+        //실제 DB로 보면 20보다 높은 모든 값이 1씩 더해져있는 것을 알 수 있다.
+//        update member m1_0 set age=(m1_0.age+1) where m1_0.age>=20;
+//    위처럼 쿼리가 나오지만
+        //모디파이를 뺀다면
+        //.InvalidDataAccessApiUsageException:이 에러가 나온다.
+        //하지만 이떄 jpa에서 이런 벌크성업데이트를 하면
+        //엔티티가 관리가 되는데 벌크 연산은 이런 영속성 컨텍스트를 무시한다.
+        //그래서 여기서 저장할 때 영속성 컨텍스트에 들어있는 상태로
+        //벌크 연산을 하면 데이터가 서로 안맞을 수 있다.
+        //위의  memberRepository.findByUsername를 통해 확인
+
+        //중요
+//        가장 좋은 것은 벌크 연산만 실행하고 끝내고 다시 조회해서 동작하는 게
+//        더 좋다. Spring data jpa랑 마이바티스랑 jdbc를 같이 사용할 때
+        //쿼리를 직접 날리는 것은 jpa가 인식하지 못하고
+        //영속성 컨텍스트가 관리가 안된다.
+        //그래서 영속성 컨텍스트와 맞지 않는다.
+//        그래서 이 경우에는 flush나 clear작업이 필요하다.
+    }
 
 }

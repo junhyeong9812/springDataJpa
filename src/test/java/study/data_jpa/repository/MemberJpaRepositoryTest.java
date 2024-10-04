@@ -145,4 +145,23 @@ class MemberJpaRepositoryTest {
         assertThat(members.size()).isEqualTo(3);
         assertThat(totalCount).isEqualTo(5);
     }
+
+    //벌크 수정 쿼리 테스트
+    @Test
+    public void bulkUpdate(){
+        //given
+        memberJpaRepository.save(new Member("member1",10));
+        memberJpaRepository.save(new Member("member2",19));
+        memberJpaRepository.save(new Member("member3",20));
+        memberJpaRepository.save(new Member("member4",21));
+        memberJpaRepository.save(new Member("member5",40));
+
+        //when
+        int resultCount = memberJpaRepository.bulkAgePlus(20);
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
+//        update member m1_0 set age=(m1_0.age+1) where m1_0.age>=20;
+        //실제 DB로 보면 20보다 높은 모든 값이 1씩 더해져있는 것을 알 수 있다.
+    }
 }
