@@ -446,4 +446,61 @@ public void findTop3HelloBy(){
 //        그래서 이 경우에는 flush나 clear작업이 필요하다.
     }
 
+    //@EntityGraph
+    //EntityGraph를 알기 위해서는 Fetch join에 대해서 알아야 한다.
+    //Lazy의 지연로딩의 N+1문제를 해결하기 위한 방식
+    @Test
+    public void findMemberLazy(){
+        //given
+        //member1 -> teamA
+        //member2 -> teamB
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamB);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        //이때 member에서 team은 다대일 관계이며 fetch타입을 lazy로
+        //해놨는데 이때 member를 조회할 때 team의 데이터가 필요가 없다면
+        //프록시 객체로 채워놓는 lazy방식
+        em.flush();
+        em.clear();
+        //이후 저장하고 영속성 컨텍스트를 비운다.
+
+        //when
+        List<Member> members = memberRepository.findAll();
+        //이때 Member의 객체 정보만 가져오고 연관관계 부분은 Proxy로 채워넣는다.
+        //Proxy라는 가짜 객체를 만들어 놓는다.
+        //보통 이러한 동작을 프록시를 초기화한다고 표현한다.
+        for (Member member : members) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+        }
+        //이렇게만 테스트를 돌리면 select로 
+//        select m1_0.member_id,m1_0.age,m1_0.team_id,m1_0.username from member m1_0;
+//        member.getUsername() = member1
+//        member.getUsername() = member2
+//        이렇게 단순하게 member만 조회하지만
+        for (Member member : members) {
+            System.out.println("member.getTeam() = " + member.getTeam().getClass());
+        }
+        //이렇게 getTeam의 클래스를 출력하면
+//        member.getTeam() = class study.data_jpa.entity.Team$HibernateProxy$HE9saTJW
+//        member.getTeam() = class study.data_jpa.entity.Team$HibernateProxy$HE9saTJW
+        //프록시 객체인 것을 알 수 있다.
+
+        for (Member member : members) {
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+        
+        //이렇게 team을 조회하게 되면 이때 프록시로 있던 객체를 조회하게 되는데
+//        select t1_0.team_id,t1_0.name from team t1_0 where t1_0.team_id=1;
+//        member.getTeam().getName() = teamA
+//        select t1_0.team_id,t1_0.name from team t1_0 where t1_0.team_id=2;
+//        member.getTeam().getName() = teamB
+        //이렇게 루프를 돌면서 값을 찍는 것을 알 수 있다.
+    }
+
 }

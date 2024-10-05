@@ -101,4 +101,8 @@ public class MemberJpaRepository {
         //이렇게 조건에 만족하면 벌크 업데이트가 된다.
     }
 
+    //@EntityGraph
+    //EntityGraph를 알기 위해서는 Fetch join에 대해서 알아야 한다.
+    //Lazy의 지연로딩의 N+1문제를 해결하기 위한 방식
+
 }
