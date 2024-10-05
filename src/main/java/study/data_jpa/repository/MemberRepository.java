@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -213,5 +214,49 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     public int bulkAgePlus(@Param("age") int age);
     //변경할 때는 모디파이가 필수!
 
+    //fetch Join을 통한 N+1해결
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+    //이렇게 fetch옵션을 사용하면 member를 조회하면 연관된 team을 한방쿼리로
+    //가져온다.
+
+    //EntityGraph
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    //member와 team까지 조회하기 위한 엔티티 그래프
+    List<Member> findAll();
+//    select
+//    m1_0.member_id,
+//    m1_0.age,
+//    t1_0.team_id,
+//    t1_0.name,
+//    m1_0.username
+//            from
+//    member m1_0
+//    left join
+//    team t1_0
+//    on t1_0.team_id=m1_0.team_id
+
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+//    @EntityGraph(attributePaths = {"team"})
+    @EntityGraph("Member.all")
+    //이렇게 NamedEntityGraph이름을 넣으면 이 네임드 엔티티 그래프가 실행된다.
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+    //이렇게 엔티티 그래프로 회원 조회를 통해 회원 데이터와 팀 데이터까지
+    //한번에 가져온다.
+    //왜냐하면 팀과 맴버를 자주 사용하기 때문에 이렇게 사용
+//    select m1_0.member_id,m1_0.age,t1_0.team_id,t1_0.name,m1_0.username
+//    from member m1_0 left join team t1_0 on t1_0.team_id=m1_0.team_id
+//    where m1_0.username='member1';
+//    이렇게 네임드 엔티티 그래프가 동작한 것을 확인할 수 있다.
+    //이처럼 엔티티 그래프는 어트리뷰트로 직접 넣거나
+    //네임드를 통해 간접적으로 넣을 수 있다.
+//엔티티 그래프 어트리뷰트 패스나 간단할 경우 JPQL을 사용한다.
+    //쿼리가 복잡해지면 find By같은 것은 안되기 떄문에
+    //복잡할 때는 JPQL로 Fetch조인을 사용하고
+    //쉬운 것들은 엔티티 그래프를 통해 값을 가져온다.
 
 }

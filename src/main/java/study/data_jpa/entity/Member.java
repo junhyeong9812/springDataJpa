@@ -14,6 +14,9 @@ import lombok.*;
         query="select m from Member m where m.username= :username"
 )//이렇게 엔티티에 Named쿼리를 통해 생성할 쿼리를 볼 수 있다.
 //JPA리포지토리에서도 이 @NamedQuery는 존재해야 된다.
+@NamedEntityGraph(name = "Member.all",
+        attributeNodes = @NamedAttributeNode("team"))
+//
 public class Member {
     @Id @GeneratedValue
     @Column(name = "member_id")

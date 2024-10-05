@@ -501,6 +501,80 @@ public void findTop3HelloBy(){
 //        select t1_0.team_id,t1_0.name from team t1_0 where t1_0.team_id=2;
 //        member.getTeam().getName() = teamB
         //이렇게 루프를 돌면서 값을 찍는 것을 알 수 있다.
+        //하지만 이때 member의 수만큼 select쿼리가 더 날라가기 때문에
+        //이러한 문제를 N+1이라 한다.
+        //이렇게 조회할 때마다 쿼리가 이리 많이 나가면 서버에 부하를 줄 수 있다.
+        //DB입장에서 1번 쿼리에 추가로 수십개의 쿼리가 더 나가서 통신을 하게 된다.
+        //이러한 문제를 fetch join을 통해 해결한다.
+
+        //확인을 위한 영속성 컨텍스트 삭제
+        em.clear();
+
+        //fetch join을 해보면
+        List<Member> memberFetchJoin = memberRepository.findMemberFetchJoin();
+//        select m1_0.member_id,m1_0.age,t1_0.team_id,t1_0.name,m1_0.username
+//        from member m1_0 left join
+//        team t1_0 on t1_0.team_id=m1_0.team_id;
+        //left join을 통해 member의 정보와 team의 정보를 한번에
+        //다 가져와서 member에 있는 team객체까지 생성해서 넣어주는 것
+        //프록시가 아닌 실제 객체를 넣는 것
+        for (Member member : memberFetchJoin) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+        //이렇게 확인해보면
+//        member.getUsername() = member2
+//        member.getTeam().getClass() = class study.data_jpa.entity.Team
+//        member.getTeam().getName() = teamB
+//        getTeam의 class가 실제 엔티티가 들어가있는 것을 볼 수 있다.
+//        fetch join은 연관관계가 있는 것을 한번에 가져오는데
+//        연관관계가 있는 것들에 대해서 객체 그래프라 표현하며
+//        연관된 것을 조인하며 다 가져오는 것
+//        db의 Join은 진짜 join만 하지만
+//        fetch join은 select절에 그 내용을 다 넣어주는 것
+//        한방 쿼리로 정보를 다 가져오는 것
+//        하지만 이때 spring data jpa는 매일 Query를 적지 않기 때문에
+//        jpql을 계속 써야하는 번거로움이 존재한다.
+//        그래서 이걸 해결해주는 게 Entity Graph다.
+//        메서드 이름으로 해결하는데 여기에 fetch조인까지 해주는 것
+
+        em.clear();
+
+        List<Member> all = memberRepository.findAll();
+//        select m1_0.member_id,m1_0.age,t1_0.team_id,t1_0.name,m1_0.username
+//        from member m1_0 left join team t1_0 on t1_0.team_id=m1_0.team_id;
+//        이렇게 한방 쿼리로 전부 가져오는 것을 볼 수 있다.
+//        내부적으로 fetch조인을 사용하는 것
+        for (Member member : all) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+
+        }
+//        member.getUsername() = member1
+//        member.getTeam().getClass() = class study.data_jpa.entity.Team
+//        member.getTeam().getName() = teamA
+//        member.getUsername() = member2
+//        member.getTeam().getClass() = class study.data_jpa.entity.Team
+//        member.getTeam().getName() = teamB
+
+        em.clear();
+        List<Member> entityGraphByUsername = memberRepository.findEntityGraphByUsername("member1");
+        for (Member member : entityGraphByUsername) {
+            System.out.println("member.getUsername() = " + member.getUsername());
+            System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+            System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+        }
+//        select m1_0.member_id,m1_0.age,t1_0.team_id,t1_0.name,m1_0.username
+//        from member m1_0 left join team t1_0 on t1_0.team_id=m1_0.team_id
+//        where m1_0.username='member1';
+//        이렇게 member1에 대한 left join이 이뤄지는 것을 볼 수 있다.
+//        entityGraph를 통해 fetch Join을 매우 편리하게 사용할 수 있다.
+//        그런데 EntityGraph기능은 JPA에서 제공하는 기능으로 
+//        JPA의 네임드 엔티티 그래프라는 기능도 존재
+
+
     }
 
 }
