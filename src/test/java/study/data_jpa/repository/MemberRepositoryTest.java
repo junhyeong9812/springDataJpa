@@ -577,4 +577,24 @@ public void findTop3HelloBy(){
 
     }
 
+    //JPA Hint & Lock
+    //jpa표준으로 JPA 쿼리에 대한 힌트를 준다.
+    //JPA구현체에게 제공하는 힌트
+    //이게 SQL에 날리는 힌트가 아닌 JPA객체에게 제공되는 힌트다.
+    @Test
+    public void queryHint(){
+        //given
+        Member member1 = memberRepository.save(new Member("member1", 10));
+        em.flush();
+        //쿼리만 나가고 엔티티 영속성 컨텍스트 내부에 존재한다.
+        em.clear();
+        //이렇게 강제로 하면 영속성 컨텍스트가 비워진다.
+
+        //when
+        Member findMember = memberRepository.findById(member1.getId()).get();
+        findMember.setUsername("member2");
+        em.flush();
+        //이렇게 하면 더티체크로 인해 바뀐 데이터에 대한 업데이트 쿼리가 나간다.
+    }
+
 }

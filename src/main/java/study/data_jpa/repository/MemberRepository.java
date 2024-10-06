@@ -259,4 +259,11 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //복잡할 때는 JPQL로 Fetch조인을 사용하고
     //쉬운 것들은 엔티티 그래프를 통해 값을 가져온다.
 
+    //JPA Hint & Lock
+    //jpa표준으로 JPA 쿼리에 대한 힌트를 준다.
+    //JPA구현체에게 제공하는 힌트
+    //이게 SQL에 날리는 힌트가 아닌 JPA객체에게 제공되는 힌트다.
+
+
+
 }
