@@ -591,10 +591,78 @@ public void findTop3HelloBy(){
         //이렇게 강제로 하면 영속성 컨텍스트가 비워진다.
 
         //when
-        Member findMember = memberRepository.findById(member1.getId()).get();
-        findMember.setUsername("member2");
-        em.flush();
+//        Member findMember = memberRepository.findById(member1.getId()).get();
+//        findMember.setUsername("member2");
+//        em.flush();
+        //update member set age=10,team_id=NULL,username='member2' where member_id=1;
         //이렇게 하면 더티체크로 인해 바뀐 데이터에 대한 업데이트 쿼리가 나간다.
+        //이런 변경 감지를 하려면 치명적인 단점은 원본 데이터가 있어야 된다.
+        //그래서 객체를 두개를 들고 있어야 하는 것이다.
+        //원래 어떤 데이터였는 지 메모리에 보관하고 있는다.
+        //그 후 더티 체크로 데이터를 체크한다.
+
+        //데이터를 변경할 목적이 아닌 조회만 하는 목적일 경우
+        //혹시나 더티체크를 위한 데이터를 가지고 있을 필요가 없기 떄문에
+        //데이터를
+        Member findMember = memberRepository.findReadOnlyByUsername("member1");
+        //이렇게 가져올 경우 메모리에 기본 객체와 더티체크를 위한 객체
+        //두개를 가지는데 이걸 최적화 하기 위해서
+        //jpa표준은 지원하지 않지만 하이버네이트가 지원하는
+        //힌트를 사용하는 것
+        //이렇게 리포지토리 인터페이스에 힌트를 지정하면
+        //readOnly최적화를 통해 스냅샷을 만들 지 않는다.
+        //내부적으로 읽기로 인식하고 최적화를 해준다.
+
+        //기술들이 좋아져서 성능테스트를 해보고 결정하면 되는데
+        //이때 실무에서 조회 트래픽이 많을 경우
+        //전체 중 리드온리 옵션을 넣어봐야 최적화가 잘 되는 것은
+        //아니다. 성능이 정말 늦는 복잡한 조회 쿼리가 잘못됬을 때
+        //문제가 생기는 것이지 이런 것은 보통 몇퍼센트 안된다.
+        //그래서 굳이 이걸 다 넣을 필요가 있나? 없다. 정말 중요한 몇개만
+        //넣는 게 좋다.
+        //그리고 조회 성능이 부족하면 레디스 같은 캐시를 활용해서
+        //최적화를 이미 했어야 된다.
+        //처음부터 다 튜닝하는 것이 아니라
+        //정말 성능에 문제가 있을 경우 단계적으로 하는 게 좋다.
+        em.flush();
+
+
+
+
+    }
+
+    //Lock이란?
+    @Test
+    public void lock(){
+        //given
+        Member member1 = new Member("member1",10);
+        memberRepository.save(member1);
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> findMember = memberRepository.findLockByUsername("member1");
+//        select m1_0.member_id,m1_0.age,m1_0.team_id,m1_0.username
+//        from member m1_0
+//        where m1_0.username='member1' for update;
+//        for update가 자동으로 붙는데
+//        FOR UPDATE는 데이터베이스에서 동시성 제어를 위해 사용되는 SQL 구문입니다. 이 구문은 SELECT 쿼리에서 특정 데이터를 조회하는 동시에 해당 데이터를 다른 트랜잭션에서 수정하지 못하도록 락을 거는 역할을 합니다.
+//
+//        작동 방식:
+//        FOR UPDATE를 사용하면 조회된 행(row)에 대해 **배타적 잠금(exclusive lock)**이 걸리게 됩니다.
+//                즉, 해당 행에 대해 읽기는 가능하지만, 다른 트랜잭션이 수정하거나 삭제하는 작업은 막습니다. 이 트랜잭션이 끝나기 전까지(커밋 또는 롤백) 다른 트랜잭션이 이 행에 접근해 변경 작업을 시도할 수 없습니다.
+//        주요 목적:
+//        동시성 문제가 발생하지 않도록 방지.
+//                데이터를 조회하면서 동시에 수정이 필요할 때, 다른 트랜잭션이 데이터를 수정하지 못하도록 잠금을 걸어 안정적인 데이터 수정 및 일관성을 보장.
+//        예를 들어, 위의 쿼리에서 member1의 데이터를 가져올 때 FOR UPDATE가 붙으면 해당 데이터를 조회하는 동안 다른 트랜잭션은 이 데이터에 대해 변경 작업(예: UPDATE, DELETE)을 할 수 없습니다.
+//
+//        언제 유용한가?
+//        다중 트랜잭션에서 동일한 데이터를 동시에 변경할 가능성이 있을 때, 데이터의 무결성을 보장하기 위해 사용됩니다.
+//        이 기능은 방언에 따라 동작방식이 달라지는데
+//        이때 Lock은 실시간 트래픽이 많을 경우에는 Lock을 걸면 안된다.
+        //왜냐면 이 데이터를 손대는 것에 다 락이 걸려서
+        //Optimastic Lock으로 하는 게 좋다.
+        em.flush();
     }
 
 }

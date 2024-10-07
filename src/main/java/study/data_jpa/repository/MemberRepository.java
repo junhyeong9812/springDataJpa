@@ -1,13 +1,12 @@
 package study.data_jpa.repository;
 
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import study.data_jpa.dto.MemberDto;
@@ -263,7 +262,20 @@ public interface MemberRepository extends JpaRepository<Member,Long> {
     //jpa표준으로 JPA 쿼리에 대한 힌트를 준다.
     //JPA구현체에게 제공하는 힌트
     //이게 SQL에 날리는 힌트가 아닌 JPA객체에게 제공되는 힌트다.
+    @QueryHints(value =@QueryHint( name="org.hibernate.readOnly",value = "true"))
+    Member findReadOnlyByUsername(String username);
+    //이렇게 해서 세팅을 하면 하이버네이트의 ReadOnly에
+    //value는 true로 두개의 문자열인데
+    //하이버네이트가 미리 지정해놓는 것
 
+    
+    //Lock이란?
+    //select for update같은
+    //select할때 데이터를 건드리지 않도록 Lock을 걸 수 있다.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    //이렇게 하면 자카르타의 jpa의 기본적인 기능으로
+    //write기능을 막는 것.
+    List<Member> findLockByUsername(String username);
 
 
 }
