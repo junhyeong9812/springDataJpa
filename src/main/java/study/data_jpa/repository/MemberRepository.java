@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MemberRepository extends JpaRepository<Member,Long> {
+public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepositoryCustom {
 //    JpaRepository를 열어보면 내부에 타입과 ID의 식별자 타입을 받아서
 //    이를 통해 Override로 함수에 받은 타입과 ID식별자 타입을 구현체로 전달하도록 되어있다.
 //    많은 기능들이 있는데 JpaRepository의 springframework,date,jpa의 리포지토리를
