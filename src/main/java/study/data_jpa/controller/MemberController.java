@@ -2,6 +2,8 @@ package study.data_jpa.controller;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,5 +44,21 @@ public class MemberController {
         memberRepository.save(new Member("userA"));
     }
 
+    //springData는 페이징과 정렬을 MVC에서 더 편리하게 사용할 수 있도록
+    //기능을 제공한다.
+    //
 
+    //web확장 -페이징과 정렬
+    @GetMapping("/members")
+    public Page<Member> List(Pageable pageable){
+        //Pageable인터페이스 필요
+        //Page는 결과정보 인터페이스
+        //바로 바인딩을 해준다.
+        Page<Member> all = memberRepository.findAll(pageable);
+        //pageAndSortRepository의 Sort로 정렬을 해준다.
+        //기본 메소드에 Pageable파라미터를 넘기면 된다.
+        return all;
+        //이렇게 반환을 할 수 있다.
+
+    }
 }
