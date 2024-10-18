@@ -279,3 +279,8 @@ public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepos
 
 
 }
+//상속한
+//JpaRepository
+//내부에 각종 기능들이 인터페이스로 구현되어 있으며
+//제네릭 타입T로 엔티티나 객체를 받는 것을 알 수 있따.
+//
