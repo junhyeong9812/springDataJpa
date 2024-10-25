@@ -319,3 +319,8 @@ public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepos
 //그래서 업데이트를 하기 위해서 merge를 사용하는 건 좋지 않다.
 
 //새로운 엔티티 구별
+//Save함수는
+//신규 데이터는 persist
+//기존 데이터는 merge
+//이렇게 하는데 이때 식별자가 객체일 경우 'null'로 판단
+//식별자가 자바 기본 타입일 경우 '0'으로 판단.

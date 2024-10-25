@@ -129,13 +129,13 @@ public class MemberController {
 
     //web확장 페이징
     //테스트 초기값
-    @PostConstruct
-    public void init(){
-        for(int i=0;i<100;i++){
-            memberRepository.save(new Member("user"+i,i));
-        }
-    }//스프링이 동작할때 테스트 데이터가 자동으로 들어간다.
-    //members로 요청해보면 1부터 100까지의 데이터가 json으로 넘어온다.
+//    @PostConstruct
+//    public void init(){
+//        for(int i=0;i<100;i++){
+//            memberRepository.save(new Member("user"+i,i));
+//        }
+//    }//스프링이 동작할때 테스트 데이터가 자동으로 들어간다.
+//    //members로 요청해보면 1부터 100까지의 데이터가 json으로 넘어온다.
 }   //http://localhost:8080/members?page=0
 //  또한 이렇게 ?page=0으로 하면 1부터 20까지 데이터가 들어오고
 //page=1일 경우 21부터 40까지의 데이터가 들어온다.
