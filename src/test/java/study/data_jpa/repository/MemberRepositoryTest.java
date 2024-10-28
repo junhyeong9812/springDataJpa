@@ -6,11 +6,9 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.repository.query.Param;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.data_jpa.dto.MemberDto;
@@ -736,7 +734,129 @@ public void findTop3HelloBy(){
         //너무 복잡해서 코드를 이해하기 힘들다.
         //jpa가 제공하는 크라이테리아가 너무 복잡하기 때문에 QueryDSL을 사용하는 게 좋다.
 
+
+
     }
+
+    //QueryByExample
+    @Test
+    public void queryByExample(){
+        //given
+        Team teamA=new Team("TeamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        //m1을 조회하고 싶다면?
+        memberRepository.findByUsername("m1");
+        //위처럼 단일 조건 쿼리를 사용하면 되지만 조건이 여러개라면 이렇게 정적으로 사용하기 힘들다.
+        //그래서 동적으로 변경되며 검색이 되도록 해야된다.
+        //probe >>엔티티 자체가 검색 조건이 된다.
+        Member member =new Member("m1");
+        //복잡성 증가를 위한 Team추가
+        Team team = new Team("TeamA");
+        member.setTeam(team);
+        //이렇게 연관관계로 검색조건 자체를 넣어버리면 된다.
+        //이렇게 하면 유저 이름과 age는 무시하고 team의 값이 들어가니 팀의 name까지 매칭을 하게 된다.
+        //select m1_0.member_id,m1_0.age,m1_0.created_by,m1_0.created_date,m1_0.last_modified_by,m1_0.last_modified_date,m1_0.team_id,m1_0.username
+        // from member m1_0 join team t1_0 on t1_0.team_id=m1_0.team_id where m1_0.username='m1' and t1_0.name='TeamA';
+        //이렇게 팀과 조인하여 데이터를 찾는 것을 볼 수 있다.
+        //이렇게 객체 그래프틀 동해서 검색이 가능하지만 이너조인만 가능하고 아우터 조인같은 복잡한 조인에서는 잘 동작하지 않는다.
+        //Probe는 ㅣㄹ드에 데이터가 있는 실제 도메인 객체
+        //ExMatcher는 특정 필드를 일치시키는 상세한 정보 제공
+        //Example은 probe와 Matcher로 구성하여 쿼리를 구성
+
+
+        //age를 무시하기 위한 설정
+        ExampleMatcher matcher = ExampleMatcher.matching().withIgnorePaths("age");
+        //
+
+//        Example<Member> example = Example.of(member);
+        //이렇게 member엔티티로 검색하는 것
+
+        //이후 age를 무시하기 위해서 별도로 matcher 파라미터를 넣어줘야 한다.
+        Example<Member> example = Example.of(member,matcher);
+        //이렇게 변경하면 자바 기본타입들은 0을 기본으로 할당되어 있기때문에 이렇게 무시하도록 해야된다.
+
+        List<Member> result = memberRepository.findAll(example);
+        //이렇게 example을 파라미터로 받는 것을 jpa 리포지토리 구현체가 기본값으로 되어 있다.
+
+        assertThat(result.get(0).getUsername()).isEqualTo("m1");
+        //이때 select를 할 때 age가 0인 이유는 도메인 객체를 가지고 검색 조건을 만드는 것인데
+        //이때 username은 넣었지만  age는 자바의 null타입이 아니기 때문에 0이 되는것
+        //그래서 age는 무시하도록 설정해야 한다.
+
+        //하지만 이런 기술들에서 join에서 문제가 많이 일어난다.그래서 이때 join이 정상적으로 다 해결될 때만 실무에 도입하는 것이 좋다.
+        //하지만 이건 join을 할때 inner만 가능하고 outter조인이 불가능하다.
+        //그래서 복잡한 조인을 하게 되면 이걸 다시 걷어내야 한다.
+
+        //이런 코드의 장점은 동적 쿼리를 편리하기 만들 수 있고
+        //도메인 객체를 그대로 사용 가능
+        //데이터 저장소를 RDB에서 NOSQL로 변경해도 코드 변경없이 추상화 가능
+        //스프링 JPA리포지토리 자체에 이미 포함되어 있다.
+
+        //하지만 외부조인이 불가능하며 중첩 제약 조건이 안되고  매칭 조건이 매우 단순하여 복잡한 조건에서는 사용하기 쉽지 않다.
+        //그렇기 때문에 QueryDSL을 사용하자.
+
+
+    }
+
+    //Projections: 엔티티 대신 DTO를 편리하게 조회할 때 사용
+    //쿼리의 Select절에 들어갈 데이터
+    //
+    @Test
+    public void projections(){
+        //given
+        Team teamA=new Team("TeamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        //이때 이름만 가져오고 싶을 경우
+//        List<UsernameOnlyDto> result = memberRepository.findProjectionsByUsername("m1",UsernameOnlyDto.class);
+        List<NestedClosedProjections> result = memberRepository.findProjectionsByUsername("m1", NestedClosedProjections.class);
+        //Projections
+//        List<UsernameOnly> findProjectionsByUsername(@Param("username") String username);
+        //이렇게 유저 온리 인터페이스를 반환타입으로 넣으면 된다.
+        //이렇게 하면 UsernameOnly내부에 프록시 객체로 데이터가 넘어온다.
+//        for(UsernameOnlyDto usernameOnly:result){
+//            System.out.println("usernameOnly = " + usernameOnly);
+//        }
+        //springData jpa에서 이렇게 인터페이스로 데이터를 받을 때 쿼리를 보면
+        //member의 username만 요청해서
+//        select m1_0.username from member m1_0 where m1_0.username='m1';
+        //전체 엔티티가 아닌 내부 데이터만 가져오는 것을 확인할 수 있다.
+        //이때 result에는 인터페이스를 가지고
+        //usernameOnly = org.springframework.data.jpa.repository.query.AbstractJpaQuery$TupleConverter$TupleBackedMap@26b6454d
+        //이렇게 인터페이스를 정의하면 스프링에서 프록시같은 기술을 통해 가짜 데이터를 만들어서 인터페이스의 구현체는
+        //spring Data jpa가 만들어서 인터페이스로 데이터를 인식해서 필요한 데이터만 담아서 전달해준다.
+        //데이터를 간편하게 가져올 수 있다.
+        //이때 장점은 findBy같은 기존 구현체함수와 연동해서 사용할 수 있다.
+        for (NestedClosedProjections nestedClosedProjections : result) {
+            System.out.println("nestedClosedProjections = " + nestedClosedProjections);
+            String username = nestedClosedProjections.getUsername();
+            System.out.println("username = " + username);
+            String TeamName = nestedClosedProjections.getTeam().getName();
+            System.out.println("TeamName = " + TeamName);
+        }
+        //이렇게 확인해보면
+        //username = m1
+        //TeamName = TeamA
+        //이렇게 데이터를 잘 가져오는데 이때 루트인 맴버에서는 최적화가 되지만 팀에서는 최적화가 안된다.
+        //명확한 한계가 존재한다. 그래서 엔티티 하나를 넘어서는 순간(조인이 일어난 순간) 쓰기 애매하다.
+        //복잡할때 DTO로 데이터를 가져오는거지/ 엔티티가 하나 있는데 이때는 엔티티를 조회해서 조회 후 DTO로 변환하는 게 더 편하다.
+    }
+
 
 
 

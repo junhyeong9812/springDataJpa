@@ -282,7 +282,19 @@ public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepos
     //write기능을 막는 것.
     List<Member> findLockByUsername(String username);
 
+    //Projections
+//    List<UsernameOnly> findProjectionsByUsername(@Param("username") String username);
+    //이렇게 유저 온리 인터페이스를 반환타입으로 넣으면 된다.
+    //class기반 프로젝션
+//    @Query("select new study.data_jpa.repository.UsernameOnlyDto(m.username) from Member m where m.username = :username")
+//    List<UsernameOnlyDto> findProjectionsByUsername(@Param("username") String username);
 
+//    @Query("select new study.data_jpa.repository.UsernameOnlyDto(m.username) from Member m where m.username = :username")
+    <T> List<T> findProjectionsByUsername(@Param("username") String username,Class<T> type);
+    //이렇게 제너릭 타입으로 받는 방법을 통해 필요에 따라 DTO를 변경할 수 있다.
+    //이렇게 동적 프로젝션이 가능하다.
+
+    //또한 이때 동적 프로젝션을 통해 제네릭 타입으로 데이터를 넣을 수 있다.
 }
 //상속한
 //JpaRepository
