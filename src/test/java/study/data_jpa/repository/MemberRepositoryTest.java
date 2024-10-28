@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.data_jpa.dto.MemberDto;
@@ -708,6 +709,34 @@ public void findTop3HelloBy(){
     //등록일/수정일/등록자/수정자 관련 정보를 저장
     //이러한 객체 세상에서는 상속이나 관계로 속성을 이어받아 사용할 수 있기
     //때문에 이를 통해 자동화
+
+    //JpaSpecificationExecutor테스트
+    @Test
+    public void specBasic(){
+        //given
+        Team teamA=new Team("TeamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        Specification<Member> spec = MemberSpec.username("m1").and(MemberSpec.teamName("TeamA"));
+        //이렇게 excuter를 통해 실행된다.
+        List<Member> result = memberRepository.findAll(spec);
+        //specification을 생성해야 된다.
+        Assertions.assertThat(result.size()).isEqualTo(1);
+        //이너 조인을 통해 where를 통해 팀과 맴버 이름에 대해서 탐색하는 쿼리가 나가는 것을 볼 수 있다.
+        //select m1_0.member_id,m1_0.age,m1_0.created_by,m1_0.created_date,m1_0.last_modified_by,m1_0.last_modified_date,m1_0.team_id,m1_0.username
+        // from member m1_0 join team t1_0 on t1_0.team_id=m1_0.team_id where m1_0.username='m1' and t1_0.name='TeamA';
+        //이렇게 자바코드로 편리하게 쿼리를 만들 수 있는데 문제는 이 구현하는 기술이 jpa 크라이테리아를 통해 jpql로 변경되어 나가지만
+        //너무 복잡해서 코드를 이해하기 힘들다.
+        //jpa가 제공하는 크라이테리아가 너무 복잡하기 때문에 QueryDSL을 사용하는 게 좋다.
+
+    }
 
 
 
