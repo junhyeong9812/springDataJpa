@@ -855,6 +855,70 @@ public void findTop3HelloBy(){
         //이렇게 데이터를 잘 가져오는데 이때 루트인 맴버에서는 최적화가 되지만 팀에서는 최적화가 안된다.
         //명확한 한계가 존재한다. 그래서 엔티티 하나를 넘어서는 순간(조인이 일어난 순간) 쓰기 애매하다.
         //복잡할때 DTO로 데이터를 가져오는거지/ 엔티티가 하나 있는데 이때는 엔티티를 조회해서 조회 후 DTO로 변환하는 게 더 편하다.
+
+
+    }
+    //네이티브 쿼리
+    //스프링 데이터 Jrojection을 활용한 기술로 가급적 사용하지 않는 게 좋다.
+    //JPA의 네이티브 SQL
+    @Test
+    public void nativeQuery(){
+        //given
+        Team teamA=new Team("TeamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        Member result = memberRepository.findByNativeQuery("m1");
+        System.out.println("result = " + result);
+        //하지만 이렇게 엔티티를 가져올 때 select 절에 다 적어줘야 하며
+        //jpa가 제공하는 jpa기능에 대해서 네이티브로 가져올 때 맴버 데이터를 다 작성해줘야 한다.
+        //또한 네이티브 쿼리로 조회할 경우 Dto로 데이터를 가져올 때 사용한다.
+        //이떄 문재눈 반환타입이 몇가지 지원이 안된다.
+        //이때 username만 가져오고 싶을 경우 Member와 매칭이 안되기 때문에
+        //커스텀리파지토리같이 만들어서 jdbc템플릿이나 마이바티스랑 엮어서 사용하는 게 더 좋다.
+        //최근에는 Dto를 사용할 수 있다.
+        //하지만 소트 파라미터가 정상적으로 동작하지 않는 경우도 있으며
+//        Jpql처럼 애플리케이션 로딩 시점에 문법 확인이 안된다
+        //jpql은 로딩될 때 다 파싱을 통해 SQL로 만들어서 문법 확인이 되지만 네이티브 쿼리는 안된다.
+        //또한 동적 쿼리도 되지 않는다.
+    }
+    //Projections을 활용한 네이티브 쿼리
+    @Test
+    public void ProjectionNativeQuery(){
+        //given
+        Team teamA=new Team("TeamA");
+        em.persist(teamA);
+        Member m1 = new Member("m1", 0, teamA);
+        Member m2 = new Member("m2", 0, teamA);
+        em.persist(m1);
+        em.persist(m2);
+        em.flush();
+        em.clear();
+
+        //when
+        Page<MemberProjection> result = memberRepository.findByNativeProjection(PageRequest.of(0, 10));
+        List<MemberProjection> content = result.getContent();
+        for(MemberProjection memberProjection:content){
+            System.out.println("memberProjection.getUsername() = " + memberProjection.getUsername());
+            System.out.println("memberProjection.getTeamName() = " + memberProjection.getTeamName());
+        }
+        //memberProjection.getUsername() = m1
+        //memberProjection.getTeamName() = TeamA
+        //memberProjection.getUsername() = m2
+        //memberProjection.getTeamName() = TeamA
+        //이렇게 데이터가 잘 되는 것을 알 수 있다.
+        //하지만 이때 동적 쿼리가 잘 안되기 때문에 마이바티스나 jdbc템플릿을 같이 활용하면 된다.
+
+        //동적 네이티브 쿼리는 크리에이트네이티브 쿼리는 하이버네이트를 활용해야 되는데
+        //이떄 String열을 빌더를 활용해서 동적으로 SQL문을 만들도록 해야 된다.
+        //하지만 그것보다 마이바티스나 Jdbc템플릿을 활용하는 게 좋다.
+
     }
 
 

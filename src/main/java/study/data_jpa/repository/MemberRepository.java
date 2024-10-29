@@ -295,6 +295,21 @@ public interface MemberRepository extends JpaRepository<Member,Long>,MemberRepos
     //이렇게 동적 프로젝션이 가능하다.
 
     //또한 이때 동적 프로젝션을 통해 제네릭 타입으로 데이터를 넣을 수 있다.
+
+
+    //네이티브 쿼리
+    //스프링 데이터 Jrojection을 활용한 기술로 가급적 사용하지 않는 게 좋다.
+    //JPA의 네이티브 SQL
+    @Query(value = "select * from member where username=?",nativeQuery = true)
+    Member findByNativeQuery(String username);
+
+    //projectionNativeQuery
+    @Query(value = "select m.member_id as id, m.username,t.name as teamName " +
+            "from member m left join team t",
+            countQuery = "select count(*) from member",
+            nativeQuery = true)
+    Page<MemberProjection> findByNativeProjection(Pageable pageable);
+
 }
 //상속한
 //JpaRepository
